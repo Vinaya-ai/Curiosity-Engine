@@ -20,7 +20,7 @@ export default function AddCuriosityPage() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [user, setUser] = useState<User | null>(null);
-  const [checkingAuth, setCheckingAuth] = useState(true);
+  const [authChecked, setAuthChecked] = useState(false);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
@@ -28,14 +28,14 @@ export default function AddCuriosityPage() {
         router.replace('/login');
       } else {
         setUser(currentUser);
-        setCheckingAuth(false);
       }
+      setAuthChecked(true);
     });
 
     return () => unsubscribe();
   }, [router]);
 
-  if (checkingAuth) return null;
+  if (!authChecked) return null;
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -163,3 +163,57 @@ export default function AddCuriosityPage() {
         </h1>
 
         <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Title
+            </label>
+            <input
+              type="text"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              className="w-full rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Link (optional)
+            </label>
+            <input
+              type="url"
+              value={link}
+              onChange={(e) => setLink(e.target.value)}
+              className="w-full rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+
+          <button
+            type="button"
+            onClick={handleAutoTag}
+            disabled={aiLoading || !title.trim()}
+            className="w-full rounded bg-purple-600 px-4 py-2 text-sm font-medium text-white hover:bg-purple-700 disabled:opacity-60"
+          >
+            {aiLoading ? 'Tagging with AI...' : 'Auto Tag with AI'}
+          </button>
+
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full rounded bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-60"
+          >
+            {loading ? 'Adding...' : 'Add Item'}
+          </button>
+        </form>
+
+        {error && (
+          <p className="mt-3 text-sm text-red-600">{error}</p>
+        )}
+
+        {success && (
+          <p className="mt-3 text-sm text-green-600">{success}</p>
+        )}
+      </div>
+    </div>
+  );
+}
