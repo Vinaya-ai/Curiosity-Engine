@@ -65,15 +65,24 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <div className="w-full max-w-sm bg-white p-6 rounded shadow">
-        <h1 className="text-xl font-semibold mb-4 text-gray-900">Login</h1>
+    <div className="min-h-screen flex items-center justify-center px-6 bg-gray-100 dark:bg-gray-950 transition-colors duration-300">
+      <div className="w-full max-w-md bg-white dark:bg-gray-900 p-8 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-800">
+
+        {/* Brand Section */}
+        <div className="text-center mb-8">
+          <h1 className="text-3xl font-bold tracking-tight text-indigo-600 dark:text-indigo-400">
+            🧠 Curiosity Engine
+          </h1>
+          <p className="mt-3 text-sm text-gray-600 dark:text-gray-400">
+            A structured way to manage your curiosity.
+          </p>
+        </div>
 
         <form onSubmit={handleEmailSignIn} className="space-y-4">
           <div>
             <label
               htmlFor="email"
-              className="block text-sm font-medium text-gray-700 mb-1"
+              className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
             >
               Email
             </label>
@@ -82,7 +91,7 @@ export default function LoginPage() {
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full rounded-xl border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
               required
             />
           </div>
@@ -90,7 +99,7 @@ export default function LoginPage() {
           <div>
             <label
               htmlFor="password"
-              className="block text-sm font-medium text-gray-700 mb-1"
+              className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
             >
               Password
             </label>
@@ -99,43 +108,44 @@ export default function LoginPage() {
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full rounded-xl border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
               required
             />
           </div>
 
-          <div className="flex gap-2">
+          <div className="flex gap-3">
             <button
               type="button"
               onClick={handleEmailSignUp}
               disabled={loading}
-              className="w-1/2 rounded bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700 disabled:opacity-60"
+              className="w-1/2 rounded-xl bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700 disabled:opacity-60 transition"
             >
               {loading ? 'Signing up...' : 'Sign Up'}
             </button>
+
             <button
               type="submit"
               disabled={loading}
-              className="w-1/2 rounded bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-60"
+              className="w-1/2 rounded-xl bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-60 transition"
             >
               {loading ? 'Signing in...' : 'Sign In'}
             </button>
           </div>
         </form>
 
-        <div className="mt-4">
+        <div className="mt-6">
           <button
             type="button"
             onClick={handleGoogleSignIn}
             disabled={loading}
-            className="w-full rounded border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-900 hover:bg-gray-50 disabled:opacity-60"
+            className="w-full rounded-xl border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-4 py-2 text-sm font-medium text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-60 transition"
           >
             {loading ? 'Opening Google...' : 'Continue with Google'}
           </button>
         </div>
 
         {error && (
-          <p className="mt-3 text-sm text-red-600" role="alert">
+          <p className="mt-4 text-sm text-red-600 text-center" role="alert">
             {error}
           </p>
         )}
@@ -143,4 +153,3 @@ export default function LoginPage() {
     </div>
   );
 }
-
