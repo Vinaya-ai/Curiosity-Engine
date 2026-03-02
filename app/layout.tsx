@@ -1,39 +1,34 @@
-'use client';
-
-import { useEffect, useState } from 'react';
-import { auth } from '@/lib/firebase';
-import { onAuthStateChanged, type User } from 'firebase/auth';
-import Link from 'next/link';
+import "./globals.css";
 
 export default function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const [user, setUser] = useState<User | null>(null);
-  const [checking, setChecking] = useState(true);
-
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      setUser(currentUser);
-      setChecking(false);
-    });
-
-    return () => unsubscribe();
-  }, []);
-
   return (
     <html lang="en">
-      <body>
-        {!checking && user && (
-          <nav className="w-full bg-slate-900 text-white px-6 py-4 flex justify-end gap-6">
-            <Link href="/dashboard">Dashboard</Link>
-            <Link href="/curiosity/add">Add</Link>
-            <Link href="/curiosity/vault">Vault</Link>
-          </nav>
-        )}
+      <body className="min-h-screen antialiased bg-gray-100 text-gray-900 dark:bg-gray-950 dark:text-gray-100 transition-colors duration-300">
+        
+        {/* Navigation */}
+        <nav className="w-full border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 px-6 py-4 shadow-sm relative flex items-center justify-end">
+          
 
-        {children}
+          {/* Right-side Navigation */}
+          <div className="flex gap-6 text-sm font-medium text-gray-700 dark:text-gray-300">
+            <a href="/dashboard" className="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
+              Dashboard
+            </a>
+            <a href="/curiosity/add" className="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
+              Add
+            </a>
+            <a href="/curiosity/vault" className="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
+              Vault
+            </a>
+          </div>
+
+        </nav>
+
+        <main>{children}</main>
       </body>
     </html>
   );
