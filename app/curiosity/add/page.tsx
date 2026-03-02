@@ -197,6 +197,80 @@ export default function AddCuriosityPage() {
             {aiLoading ? 'Tagging with AI...' : 'Auto Tag with AI'}
           </button>
 
+          {/* Time Required */}
+<div>
+  <label className="block text-sm font-medium text-gray-700 mb-1">
+    Time Required (minutes)
+  </label>
+  <input
+    type="number"
+    min="1"
+    value={timeRequired}
+    onChange={(e) => setTimeRequired(Number(e.target.value))}
+    className="w-full rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+  />
+</div>
+
+{/* Energy Level */}
+<div>
+  <label className="block text-sm font-medium text-gray-700 mb-1">
+    Energy Level
+  </label>
+  <select
+    value={energyLevel}
+    onChange={(e) =>
+      setEnergyLevel(e.target.value as 'low' | 'medium' | 'high')
+    }
+    className="w-full rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+  >
+    <option value="low">Low</option>
+    <option value="medium">Medium</option>
+    <option value="high">High</option>
+  </select>
+</div>
+
+{/* Engagement Type */}
+<div>
+  <label className="block text-sm font-medium text-gray-700 mb-1">
+    Engagement Type
+  </label>
+  <select
+    value={engagementType}
+    onChange={(e) =>
+      setEngagementType(
+        e.target.value as 'passive' | 'active' | 'deep'
+      )
+    }
+    className="w-full rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+  >
+    <option value="passive">Passive</option>
+    <option value="active">Active</option>
+    <option value="deep">Deep</option>
+  </select>
+</div>
+
+{/* Content Type */}
+<div>
+  <label className="block text-sm font-medium text-gray-700 mb-1">
+    Content Type
+  </label>
+  <select
+    value={contentType}
+    onChange={(e) =>
+      setContentType(e.target.value as ContentType)
+    }
+    className="w-full rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+  >
+    <option value="video">Video</option>
+    <option value="movie">Movie</option>
+    <option value="pdf">PDF</option>
+    <option value="podcast">Podcast</option>
+    <option value="project">Project</option>
+    <option value="article">Article</option>
+    <option value="other">Other</option>
+  </select>
+</div>
+
           <button
             type="submit"
             disabled={loading}

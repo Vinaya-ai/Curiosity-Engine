@@ -1,7 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { onAuthStateChanged } from 'firebase/auth';
+import { auth } from '@/lib/firebase';
 import {
   signUpWithEmail,
   signInWithEmail,
@@ -10,6 +13,15 @@ import {
 
 export default function LoginPage() {
   const router = useRouter();
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      if (currentUser) {
+        router.replace('/dashboard');
+      }
+    });
+  
+    return () => unsubscribe();
+  }, [router]);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);

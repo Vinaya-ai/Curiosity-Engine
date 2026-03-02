@@ -27,7 +27,11 @@ export async function POST(request: NextRequest) {
 
     if (recentTimestamps.length >= MAX_REQUESTS) {
       return NextResponse.json(
-        { error: 'Rate limit exceeded. Try again later.' },
+        { 
+          error: 'Rate limit exceeded. Try again later.',
+          remaining: 0,
+          limit: MAX_REQUESTS
+        },
         { status: 429 }
       );
     }
