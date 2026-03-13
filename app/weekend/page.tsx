@@ -12,10 +12,10 @@ interface Item {
   contentType: string; energyLevel: string; engagementType: string;
   timeRequired: number; completed: boolean;
 }
-const TYPE_ICON: Record<string, string> = { article: '📄', video: '🎬', podcast: '🎧', book: '📚', course: '🎓', other: '🔗' };
+
+const TYPE_ICON: Record<string, string> = { article: '📄', video: '🎬', podcast: '🎧', pdf: '📑', project: '🛠', movie: '🎥', other: '🔗' };
 const ENERGY_COLOR: Record<string, string> = { low: '#2d9e6b', medium: '#b05070', high: '#c1674a' };
 
-// --- Sparkle canvas ---
 function SparkleCanvas({ dark }: { dark: boolean }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const rafRef = useRef<number | undefined>(undefined);
@@ -26,12 +26,11 @@ function SparkleCanvas({ dark }: { dark: boolean }) {
     let W = canvas.width = canvas.offsetWidth;
     let H = canvas.height = canvas.offsetHeight;
 
-    // Rose/pink sparkle palette
     const COLORS = dark
-      ? ['rgba(232,120,154,0.7)', 'rgba(200,100,140,0.5)', 'rgba(245,190,210,0.6)', 'rgba(176,80,112,0.4)', 'rgba(255,210,225,0.5)']
-      : ['rgba(176,80,112,0.4)', 'rgba(200,120,150,0.3)', 'rgba(240,160,190,0.5)', 'rgba(140,60,90,0.25)', 'rgba(255,180,210,0.4)'];
+      ? ['rgba(232,120,154,0.7)','rgba(200,100,140,0.5)','rgba(245,190,210,0.6)','rgba(176,80,112,0.4)','rgba(255,210,225,0.5)']
+      : ['rgba(176,80,112,0.4)','rgba(200,120,150,0.3)','rgba(240,160,190,0.5)','rgba(140,60,90,0.25)','rgba(255,180,210,0.4)'];
 
-    const particles = Array.from({ length: 70 }, () => ({
+    const particles = Array.from({ length: 60 }, () => ({
       x: Math.random() * W, y: Math.random() * H,
       vx: (Math.random() - 0.5) * 0.5, vy: (Math.random() - 0.5) * 0.5,
       r: Math.random() * 2.5 + 0.5,
@@ -46,11 +45,9 @@ function SparkleCanvas({ dark }: { dark: boolean }) {
         p.x += p.vx; p.y += p.vy; p.twinkle += p.twinkleSpeed;
         if (p.x < 0) p.x = W; if (p.x > W) p.x = 0;
         if (p.y < 0) p.y = H; if (p.y > H) p.y = 0;
-        const alpha = 0.4 + 0.6 * Math.abs(Math.sin(p.twinkle));
-        ctx.globalAlpha = alpha;
+        ctx.globalAlpha = 0.4 + 0.6 * Math.abs(Math.sin(p.twinkle));
         ctx.fillStyle = p.color;
         ctx.beginPath();
-        // Star shape
         for (let i = 0; i < 5; i++) {
           const a = (i * 4 * Math.PI) / 5 - Math.PI / 2;
           const ra = (i * 4 * Math.PI) / 5 + Math.PI / 10 - Math.PI / 2;
@@ -65,10 +62,7 @@ function SparkleCanvas({ dark }: { dark: boolean }) {
     };
     draw();
 
-    const resize = () => {
-      W = canvas.width = canvas.offsetWidth;
-      H = canvas.height = canvas.offsetHeight;
-    };
+    const resize = () => { W = canvas.width = canvas.offsetWidth; H = canvas.height = canvas.offsetHeight; };
     window.addEventListener('resize', resize);
     return () => { if (rafRef.current) cancelAnimationFrame(rafRef.current); window.removeEventListener('resize', resize); };
   }, [dark]);
@@ -79,23 +73,22 @@ function SparkleCanvas({ dark }: { dark: boolean }) {
 export default function WeekendPage() {
   const router = useRouter();
   const { dark, toggle } = useTheme();
-  const [items, setItems] = useState<Item[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [mode, setMode] = useState<'choose' | 'surprise' | 'bytime'>('choose');
+  const [userId, setUserId] = useState('');
+  const [items, setItems]   = useState<Item[]>([]);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [mode, setMode]     = useState<'choose'|'surprise'|'bytime'>('choose');
   const [timeFilter, setTimeFilter] = useState(60);
   const [result, setResult] = useState<Item | null>(null);
-  const [done, setDone] = useState(false);
-  const [userId, setUserId] = useState<string>("");
+  const [done, setDone]     = useState(false);
 
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, async (u) => {
-      if (!u) { router.replace("/login"); return; }
+      if (!u) { router.replace('/login'); return; }
       setUserId(u.uid);
       try {
         const data = await getUserItems(u.uid);
         setItems((data as Item[]).filter(i => !i.completed));
       } catch (e) { console.error(e); }
-      setLoading(false);
     });
     return () => unsub();
   }, [router]);
@@ -125,63 +118,68 @@ export default function WeekendPage() {
     <div style={{ minHeight: '100vh', background: 'var(--bg)' }}>
       <nav className="ce-nav">
         <a href="/dashboard" className="ce-brand">Curiosity <em>Engine</em></a>
-        <div className="ce-nav-links">
+        <div className="ce-nav-links ce-nav-mobile-hide">
           <a href="/dashboard" className="ce-nav-link">Dashboard</a>
           <a href="/curiosity/vault" className="ce-nav-link">Vault</a>
           <a href="/curiosity/add" className="ce-nav-link">+ Add</a>
           <span className="ce-nav-link active">Weekend</span>
           <button className="ce-theme-btn" onClick={toggle}>{dark ? '☀️' : '🌙'}</button>
         </div>
+        <div className="ce-nav-hamburger">
+          <button className="ce-theme-btn" onClick={toggle}>{dark ? '☀️' : '🌙'}</button>
+          <button className="ce-theme-btn" onClick={() => setMenuOpen(o => !o)}>☰</button>
+        </div>
       </nav>
+      {menuOpen && (
+        <div style={{ background: 'var(--bg-card)', borderBottom: '1px solid var(--border)', padding: '8px 16px', display: 'flex', flexDirection: 'column', gap: 2 }}>
+          {[['Dashboard','/dashboard'],['Vault','/curiosity/vault'],['+ Add','/curiosity/add'],['Weekend','/weekend']].map(([label, href]) => (
+            <a key={href} href={href} className="ce-nav-link" style={{ display: 'block', padding: '10px 12px' }} onClick={() => setMenuOpen(false)}>{label}</a>
+          ))}
+        </div>
+      )}
 
       <div className="ce-page">
         {/* Hero with sparkles */}
-        <div style={{ position: 'relative', borderRadius: 'var(--radius-lg)', overflow: 'hidden', padding: '48px 36px', marginBottom: 36,
-          background: dark ? 'linear-gradient(135deg, #2a1620 0%, #1e1018 100%)' : 'linear-gradient(135deg, #fde8ee 0%, #f8f0f8 100%)',
-          border: '1px solid var(--rose-border)' }}>
+        <div className="ce-weekend-hero" style={{
+          position: 'relative', borderRadius: 'var(--radius-lg)', overflow: 'hidden',
+          padding: '48px 36px', marginBottom: 32,
+          background: dark ? 'linear-gradient(135deg,#2a1620 0%,#1e1018 100%)' : 'linear-gradient(135deg,#fde8ee 0%,#f8f0f8 100%)',
+          border: '1px solid var(--rose-border)',
+        }}>
           <SparkleCanvas dark={dark} />
           <div style={{ position: 'relative', zIndex: 1, textAlign: 'center' }}>
-            <div style={{ fontSize: 48, marginBottom: 12 }}>✨</div>
-            <h1 style={{ fontFamily: "'Fraunces',serif", fontSize: 34, fontWeight: 700, color: 'var(--text)', letterSpacing: '-0.5px', marginBottom: 10 }}>
+            <div style={{ fontSize: 44, marginBottom: 10 }}>✨</div>
+            <h1 style={{ fontFamily: "'Fraunces',serif", fontSize: 'clamp(26px,7vw,34px)', fontWeight: 700, color: 'var(--text)', letterSpacing: '-0.5px', marginBottom: 10 }}>
               Weekend <em style={{ fontStyle: 'italic', color: 'var(--rose)' }}>Mode</em>
             </h1>
-            <p style={{ color: 'var(--text-2)', fontSize: 15, maxWidth: 380, margin: '0 auto' }}>
+            <p style={{ color: 'var(--text-2)', fontSize: 15, maxWidth: 340, margin: '0 auto' }}>
               Stop scrolling. Pick one curiosity and actually explore it.
             </p>
-            <div style={{ marginTop: 16, fontSize: 13, color: 'var(--text-3)' }}>{items.length} things waiting for you</div>
+            <div style={{ marginTop: 12, fontSize: 13, color: 'var(--text-3)' }}>{items.length} things waiting for you</div>
           </div>
         </div>
 
         {mode === 'choose' && (
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-            <button onClick={() => { setMode('surprise'); pickSurprise(); }} style={{
-              padding: '28px 20px', borderRadius: 'var(--radius-lg)', border: '2px solid var(--rose-border)',
-              background: 'var(--rose-light)', cursor: 'pointer', textAlign: 'center', transition: 'all 0.15s',
-            }}
-              onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--rose)'; e.currentTarget.style.transform = 'translateY(-2px)'; }}
-              onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--rose-border)'; e.currentTarget.style.transform = 'translateY(0)'; }}>
-              <div style={{ fontSize: 36, marginBottom: 12 }}>🎲</div>
-              <div style={{ fontFamily: "'Fraunces',serif", fontSize: 18, fontWeight: 700, color: 'var(--rose)', marginBottom: 8 }}>Surprise Me</div>
-              <div style={{ fontSize: 13, color: 'var(--text-2)' }}>Pick anything from your vault at random</div>
-            </button>
-            <button onClick={() => setMode('bytime')} style={{
-              padding: '28px 20px', borderRadius: 'var(--radius-lg)', border: '2px solid var(--blue-border)',
-              background: 'var(--blue-light)', cursor: 'pointer', textAlign: 'center', transition: 'all 0.15s',
-            }}
-              onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--blue)'; e.currentTarget.style.transform = 'translateY(-2px)'; }}
-              onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--blue-border)'; e.currentTarget.style.transform = 'translateY(0)'; }}>
-              <div style={{ fontSize: 36, marginBottom: 12 }}>⏱</div>
-              <div style={{ fontFamily: "'Fraunces',serif", fontSize: 18, fontWeight: 700, color: 'var(--blue)', marginBottom: 8 }}>By Time</div>
-              <div style={{ fontSize: 13, color: 'var(--text-2)' }}>Tell me how long you have</div>
-            </button>
+          <div className="ce-grid-2">
+            {[
+              { mode: 'surprise' as const, icon: '🎲', title: 'Surprise Me', desc: 'Pick anything from your vault at random', color: 'var(--rose)', border: 'var(--rose-border)', bg: 'var(--rose-light)' },
+              { mode: 'bytime'   as const, icon: '⏱', title: 'By Time',     desc: 'Tell me how long you have',               color: 'var(--blue)', border: 'var(--blue-border)', bg: 'var(--blue-light)' },
+            ].map(opt => (
+              <button key={opt.mode} onClick={() => { setMode(opt.mode); if (opt.mode === 'surprise') pickSurprise(); }} style={{
+                padding: 'clamp(20px,4vw,28px) 20px', borderRadius: 'var(--radius-lg)', border: `2px solid ${opt.border}`,
+                background: opt.bg, cursor: 'pointer', textAlign: 'center', transition: 'all 0.15s', width: '100%',
+              }}>
+                <div style={{ fontSize: 36, marginBottom: 10 }}>{opt.icon}</div>
+                <div style={{ fontFamily: "'Fraunces',serif", fontSize: 18, fontWeight: 700, color: opt.color, marginBottom: 6 }}>{opt.title}</div>
+                <div style={{ fontSize: 13, color: 'var(--text-2)' }}>{opt.desc}</div>
+              </button>
+            ))}
           </div>
         )}
 
         {mode === 'bytime' && !result && (
-          <div className="ce-card" style={{ padding: '32px' }}>
-            <h2 style={{ fontFamily: "'Fraunces',serif", fontSize: 20, fontWeight: 700, color: 'var(--text)', marginBottom: 6 }}>
-              How much time do you have?
-            </h2>
+          <div className="ce-card" style={{ padding: 'clamp(20px,4vw,32px)' }}>
+            <h2 style={{ fontFamily: "'Fraunces',serif", fontSize: 20, fontWeight: 700, color: 'var(--text)', marginBottom: 6 }}>How much time do you have?</h2>
             <p style={{ color: 'var(--text-3)', fontSize: 14, marginBottom: 24 }}>I'll find something that fits.</p>
             <label className="ce-label">Up to — <span style={{ color: 'var(--rose)', fontWeight: 700 }}>{timeFilter} minutes</span></label>
             <input type="range" min={10} max={180} step={10} value={timeFilter}
@@ -190,16 +188,15 @@ export default function WeekendPage() {
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: 'var(--text-3)', marginBottom: 24 }}>
               <span>10m</span><span>3hrs</span>
             </div>
-            <div style={{ display: 'flex', gap: 10 }}>
+            <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
               <button onClick={() => setMode('choose')} className="ce-btn ce-btn-secondary" style={{ width: 'auto', padding: '11px 18px' }}>← Back</button>
-              <button onClick={pickByTime} className="ce-btn ce-btn-primary">Find something →</button>
+              <button onClick={pickByTime} className="ce-btn ce-btn-primary" style={{ flex: 1 }}>Find something →</button>
             </div>
           </div>
         )}
 
-        {/* Result card */}
         {result && (
-          <div className="ce-card" style={{ padding: '28px', marginTop: mode !== 'choose' ? 0 : 24, borderLeft: `4px solid ${ENERGY_COLOR[result.energyLevel] || 'var(--rose)'}`, animation: 'ceUp 0.4s cubic-bezier(0.16,1,0.3,1) both' }}>
+          <div className="ce-card" style={{ padding: 'clamp(20px,4vw,28px)', borderLeft: `4px solid ${ENERGY_COLOR[result.energyLevel] || 'var(--rose)'}`, animation: 'ceUp 0.4s cubic-bezier(0.16,1,0.3,1) both' }}>
             {done ? (
               <div style={{ textAlign: 'center', padding: '20px 0' }}>
                 <div style={{ fontSize: 42, marginBottom: 12 }}>🎉</div>
@@ -209,17 +206,17 @@ export default function WeekendPage() {
               <>
                 <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-3)', letterSpacing: '0.8px', textTransform: 'uppercase', marginBottom: 12 }}>Today's pick ✨</div>
                 <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start', marginBottom: 16 }}>
-                  <span style={{ fontSize: 28 }}>{TYPE_ICON[result.contentType] || '🔗'}</span>
-                  <h2 style={{ fontFamily: "'Fraunces',serif", fontSize: 22, fontWeight: 700, color: 'var(--text)', lineHeight: 1.3 }}>{result.title}</h2>
+                  <span style={{ fontSize: 26, flexShrink: 0 }}>{TYPE_ICON[result.contentType] || '🔗'}</span>
+                  <h2 style={{ fontFamily: "'Fraunces',serif", fontSize: 'clamp(18px,4vw,22px)', fontWeight: 700, color: 'var(--text)', lineHeight: 1.3, wordBreak: 'break-word' }}>{result.title}</h2>
                 </div>
                 <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 24 }}>
-                  <span style={{ padding: '4px 10px', borderRadius: 6, fontSize: 12, fontWeight: 600, background: `${ENERGY_COLOR[result.energyLevel]}18`, color: ENERGY_COLOR[result.energyLevel], border: `1px solid ${ENERGY_COLOR[result.energyLevel]}40` }}>
+                  <span style={{ padding: '4px 10px', borderRadius: 6, fontSize: 12, fontWeight: 600, background: `${ENERGY_COLOR[result.energyLevel]}18`, color: ENERGY_COLOR[result.energyLevel] }}>
                     {result.energyLevel} energy
                   </span>
-                  <span style={{ padding: '4px 10px', borderRadius: 6, fontSize: 12, fontWeight: 500, background: 'var(--bg)', color: 'var(--text-3)', border: '1px solid var(--border)' }}>
+                  <span style={{ padding: '4px 10px', borderRadius: 6, fontSize: 12, background: 'var(--bg)', color: 'var(--text-3)', border: '1px solid var(--border)' }}>
                     {result.engagementType}
                   </span>
-                  <span style={{ padding: '4px 10px', borderRadius: 6, fontSize: 12, fontWeight: 500, background: 'var(--bg)', color: 'var(--text-3)', border: '1px solid var(--border)' }}>
+                  <span style={{ padding: '4px 10px', borderRadius: 6, fontSize: 12, background: 'var(--bg)', color: 'var(--text-3)', border: '1px solid var(--border)' }}>
                     ⏱ {result.timeRequired}m
                   </span>
                 </div>
@@ -229,16 +226,13 @@ export default function WeekendPage() {
                       Open it →
                     </a>
                   )}
-                  <button onClick={handleDone} className="ce-btn" style={{ width: 'auto', padding: '11px 20px', background: 'var(--mint-light)', color: 'var(--mint)', border: '1px solid var(--mint-border)', fontSize: 14, fontWeight: 600, fontFamily: "'DM Sans',sans-serif", borderRadius: 'var(--radius)' }}>
-                    ✓ Mark done
-                  </button>
-                  <button onClick={mode === 'surprise' ? pickSurprise : pickByTime}
-                    className="ce-btn ce-btn-secondary" style={{ width: 'auto', padding: '11px 18px', fontSize: 14 }}>
-                    Try another
-                  </button>
-                  <button onClick={() => { setResult(null); setMode('choose'); }} className="ce-btn ce-btn-secondary" style={{ width: 'auto', padding: '11px 18px', fontSize: 14 }}>
-                    ← Back
-                  </button>
+                  <button onClick={handleDone} style={{
+                    padding: '11px 20px', borderRadius: 'var(--radius)', border: '1px solid var(--mint-border)',
+                    background: 'var(--mint-light)', color: 'var(--mint)', fontSize: 14, fontWeight: 600,
+                    fontFamily: "'DM Sans',sans-serif", cursor: 'pointer',
+                  }}>✓ Mark done</button>
+                  <button onClick={mode === 'surprise' ? pickSurprise : pickByTime} className="ce-btn ce-btn-secondary" style={{ width: 'auto', padding: '11px 18px', fontSize: 14 }}>Try another</button>
+                  <button onClick={() => { setResult(null); setMode('choose'); }} className="ce-btn ce-btn-secondary" style={{ width: 'auto', padding: '11px 18px', fontSize: 14 }}>← Back</button>
                 </div>
               </>
             )}

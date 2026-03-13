@@ -13,23 +13,24 @@ interface Item {
   timeRequired: number; completed: boolean; aiTagged?: boolean;
 }
 
-const TYPE_ICON: Record<string, string> = { article: '📄', video: '🎬', podcast: '🎧', book: '📚', course: '🎓', other: '🔗' };
+const TYPE_ICON: Record<string, string> = { article: '📄', video: '🎬', podcast: '🎧', pdf: '📑', project: '🛠', movie: '🎥', other: '🔗' };
 const ENERGY_COLOR: Record<string, string> = { low: 'var(--mint)', medium: 'var(--rose)', high: 'var(--terra)' };
-const ENERGY_BG: Record<string, string> = { low: 'var(--mint-light)', medium: 'var(--rose-light)', high: 'var(--terra-light)' };
+const ENERGY_BG:    Record<string, string> = { low: 'var(--mint-light)', medium: 'var(--rose-light)', high: 'var(--terra-light)' };
 
 export default function VaultPage() {
   const router = useRouter();
   const { dark, toggle } = useTheme();
-  const [items, setItems] = useState<Item[]>([]);
+  const [userId, setUserId] = useState('');
+  const [items, setItems]   = useState<Item[]>([]);
   const [loading, setLoading] = useState(true);
-  const [search, setSearch] = useState('');
-  const [filter, setFilter] = useState<'all' | 'pending' | 'done'>('all');
-  const [energyFilter, setEnergyFilter] = useState<string>("all");
-  const [userId, setUserId] = useState<string>("");
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [search, setSearch]   = useState('');
+  const [filter, setFilter]   = useState<'all'|'pending'|'done'>('all');
+  const [energyFilter, setEnergyFilter] = useState('all');
 
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, async (u) => {
-      if (!u) { router.replace("/login"); return; }
+      if (!u) { router.replace('/login'); return; }
       setUserId(u.uid);
       try {
         const data = await getUserItems(u.uid);
@@ -40,66 +41,58 @@ export default function VaultPage() {
     return () => unsub();
   }, [router]);
 
-  const filtered = useMemo(() => {
-    return items.filter(item => {
-      if (filter === 'pending' && item.completed) return false;
-      if (filter === 'done' && !item.completed) return false;
-      if (energyFilter !== 'all' && item.energyLevel !== energyFilter) return false;
-      if (search && !item.title.toLowerCase().includes(search.toLowerCase())) return false;
-      return true;
-    });
-  }, [items, filter, energyFilter, search]);
+  const filtered = useMemo(() => items.filter(item => {
+    if (filter === 'pending' && item.completed) return false;
+    if (filter === 'done' && !item.completed) return false;
+    if (energyFilter !== 'all' && item.energyLevel !== energyFilter) return false;
+    if (search && !item.title.toLowerCase().includes(search.toLowerCase())) return false;
+    return true;
+  }), [items, filter, energyFilter, search]);
 
   const pending = filtered.filter(i => !i.completed);
-  const done = filtered.filter(i => i.completed);
+  const done    = filtered.filter(i => i.completed);
 
   const handleToggle = async (id: string, current: boolean) => {
     setItems(prev => prev.map(i => i.id === id ? { ...i, completed: !current } : i));
     try { await toggleItemCompletion(userId, id, !current); }
-    catch (e) { setItems(prev => prev.map(i => i.id === id ? { ...i, completed: current } : i)); }
+    catch { setItems(prev => prev.map(i => i.id === id ? { ...i, completed: current } : i)); }
   };
 
   const ItemCard = ({ item }: { item: Item }) => (
-    <div className="ce-card" style={{ padding: '16px 18px', display: 'flex', gap: 14, alignItems: 'flex-start', transition: 'box-shadow 0.15s', opacity: item.completed ? 0.6 : 1 }}
-      onMouseEnter={e => (e.currentTarget.style.boxShadow = 'var(--shadow-md)')}
-      onMouseLeave={e => (e.currentTarget.style.boxShadow = 'var(--shadow)')}>
-      {/* Checkbox */}
+    <div className="ce-card" style={{ padding: '14px 16px', display: 'flex', gap: 12, alignItems: 'flex-start', opacity: item.completed ? 0.6 : 1 }}>
       <button onClick={() => handleToggle(item.id, item.completed)} style={{
-        width: 20, height: 20, borderRadius: 6, border: '2px solid',
+        width: 20, height: 20, borderRadius: 6, border: '2px solid', flexShrink: 0, marginTop: 2,
         borderColor: item.completed ? 'var(--mint)' : 'var(--border)',
         background: item.completed ? 'var(--mint)' : 'transparent',
-        cursor: 'pointer', flexShrink: 0, marginTop: 2,
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        transition: 'all 0.15s',
+        cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.15s',
       }}>
         {item.completed && <span style={{ color: '#fff', fontSize: 11, fontWeight: 700 }}>✓</span>}
       </button>
 
-      <span style={{ fontSize: 20, flexShrink: 0 }}>{TYPE_ICON[item.contentType] || '🔗'}</span>
+      <span style={{ fontSize: 18, flexShrink: 0 }}>{TYPE_ICON[item.contentType] || '🔗'}</span>
 
       <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--text)', marginBottom: 6, textDecoration: item.completed ? 'line-through' : 'none' }}>
+        <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--text)', marginBottom: 6, textDecoration: item.completed ? 'line-through' : 'none', wordBreak: 'break-word' }}>
           {item.title}
         </div>
         <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
           <span style={{ padding: '3px 8px', borderRadius: 5, fontSize: 11, fontWeight: 600, background: ENERGY_BG[item.energyLevel], color: ENERGY_COLOR[item.energyLevel] }}>
             {item.energyLevel}
           </span>
-          <span style={{ padding: '3px 8px', borderRadius: 5, fontSize: 11, fontWeight: 500, background: 'var(--bg)', color: 'var(--text-3)', border: '1px solid var(--border)' }}>
+          <span style={{ padding: '3px 8px', borderRadius: 5, fontSize: 11, background: 'var(--bg)', color: 'var(--text-3)', border: '1px solid var(--border)' }}>
             {item.engagementType}
           </span>
-          <span style={{ padding: '3px 8px', borderRadius: 5, fontSize: 11, fontWeight: 500, background: 'var(--bg)', color: 'var(--text-3)', border: '1px solid var(--border)' }}>
+          <span style={{ padding: '3px 8px', borderRadius: 5, fontSize: 11, background: 'var(--bg)', color: 'var(--text-3)', border: '1px solid var(--border)' }}>
             ⏱ {item.timeRequired}m
           </span>
-          {item.aiTagged && <span style={{ padding: '3px 8px', borderRadius: 5, fontSize: 11, fontWeight: 600, background: 'var(--blue-light)', color: 'var(--blue)', border: '1px solid var(--blue-border)' }}>🤖 AI</span>}
         </div>
       </div>
 
       {item.link && (
         <a href={item.link} target="_blank" rel="noopener noreferrer" style={{
-          padding: '6px 12px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border)',
+          padding: '6px 10px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--rose-border)',
           fontSize: 12, fontWeight: 600, color: 'var(--rose)', textDecoration: 'none',
-          background: 'var(--rose-light)', flexShrink: 0, transition: 'all 0.15s',
+          background: 'var(--rose-light)', flexShrink: 0, whiteSpace: 'nowrap',
         }}>Open →</a>
       )}
     </div>
@@ -109,38 +102,48 @@ export default function VaultPage() {
     <div style={{ minHeight: '100vh', background: 'var(--bg)' }}>
       <nav className="ce-nav">
         <a href="/dashboard" className="ce-brand">Curiosity <em>Engine</em></a>
-        <div className="ce-nav-links">
+        <div className="ce-nav-links ce-nav-mobile-hide">
           <a href="/dashboard" className="ce-nav-link">Dashboard</a>
           <span className="ce-nav-link active">Vault</span>
           <a href="/curiosity/add" className="ce-nav-link">+ Add</a>
           <a href="/weekend" className="ce-nav-link">Weekend</a>
           <button className="ce-theme-btn" onClick={toggle}>{dark ? '☀️' : '🌙'}</button>
         </div>
+        <div className="ce-nav-hamburger">
+          <button className="ce-theme-btn" onClick={toggle}>{dark ? '☀️' : '🌙'}</button>
+          <button className="ce-theme-btn" onClick={() => setMenuOpen(o => !o)}>☰</button>
+        </div>
       </nav>
+      {menuOpen && (
+        <div style={{ background: 'var(--bg-card)', borderBottom: '1px solid var(--border)', padding: '8px 16px', display: 'flex', flexDirection: 'column', gap: 2 }}>
+          {[['Dashboard','/dashboard'],['Vault','/curiosity/vault'],['+ Add','/curiosity/add'],['Weekend','/weekend']].map(([label, href]) => (
+            <a key={href} href={href} className="ce-nav-link" style={{ display: 'block', padding: '10px 12px' }} onClick={() => setMenuOpen(false)}>{label}</a>
+          ))}
+        </div>
+      )}
 
       <div className="ce-page">
-        <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginBottom: 28 }}>
+        <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginBottom: 24, flexWrap: 'wrap', gap: 12 }}>
           <div>
-            <h1 style={{ fontFamily: "'Fraunces',serif", fontSize: 30, fontWeight: 700, color: 'var(--text)', letterSpacing: '-0.4px' }}>
+            <h1 style={{ fontFamily: "'Fraunces',serif", fontSize: 'clamp(24px,6vw,30px)', fontWeight: 700, color: 'var(--text)', letterSpacing: '-0.4px' }}>
               Your <em style={{ fontStyle: 'italic', color: 'var(--rose)' }}>Vault</em>
             </h1>
-            <p style={{ color: 'var(--text-2)', fontSize: 14, marginTop: 6 }}>{items.length} curiosities saved</p>
+            <p style={{ color: 'var(--text-2)', fontSize: 14, marginTop: 4 }}>{items.length} curiosities saved</p>
           </div>
           <a href="/curiosity/add" className="ce-btn ce-btn-primary" style={{ width: 'auto', padding: '10px 18px', textDecoration: 'none', fontSize: 13 }}>+ Add New</a>
         </div>
 
         {/* Filters */}
-        <div style={{ display: 'flex', gap: 10, marginBottom: 20, flexWrap: 'wrap' }}>
+        <div className="ce-vault-filters" style={{ display: 'flex', gap: 10, marginBottom: 20, flexWrap: 'wrap' }}>
           <input className="ce-input" value={search} onChange={e => setSearch(e.target.value)}
-            placeholder="🔍 Search..." style={{ flex: 1, minWidth: 180 }} />
+            placeholder="🔍 Search..." style={{ flex: 1, minWidth: 160 }} />
           <div style={{ display: 'flex', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius)', padding: 3, gap: 2 }}>
-            {(['all', 'pending', 'done'] as const).map(f => (
+            {(['all','pending','done'] as const).map(f => (
               <button key={f} onClick={() => setFilter(f)} style={{
-                padding: '6px 12px', borderRadius: 'var(--radius-sm)', border: 'none',
+                padding: '6px 10px', borderRadius: 'var(--radius-sm)', border: 'none',
                 fontFamily: "'DM Sans',sans-serif", fontSize: 12, fontWeight: 600, cursor: 'pointer',
                 background: filter === f ? 'var(--rose)' : 'transparent',
-                color: filter === f ? '#fff' : 'var(--text-3)', transition: 'all 0.15s',
-                textTransform: 'capitalize',
+                color: filter === f ? '#fff' : 'var(--text-3)', transition: 'all 0.15s', textTransform: 'capitalize',
               }}>{f}</button>
             ))}
           </div>
@@ -163,7 +166,7 @@ export default function VaultPage() {
         ) : filtered.length === 0 ? (
           <div className="ce-card" style={{ padding: '48px', textAlign: 'center' }}>
             <div style={{ fontSize: 36, marginBottom: 12 }}>🔍</div>
-            <div style={{ fontFamily: "'Fraunces',serif", fontSize: 18, color: 'var(--text)', marginBottom: 8 }}>Nothing here yet</div>
+            <div style={{ fontFamily: "'Fraunces',serif", fontSize: 18, color: 'var(--text)', marginBottom: 8 }}>Nothing here</div>
             <a href="/curiosity/add" style={{ color: 'var(--rose)', fontWeight: 600, textDecoration: 'none' }}>Add your first curiosity →</a>
           </div>
         ) : (

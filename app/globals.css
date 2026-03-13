@@ -177,3 +177,53 @@ body {
   .ce-nav { padding: 14px 16px; }
   .ce-page { padding: 28px 16px; }
 }
+
+/* ── Mobile nav: hide text links, show hamburger ── */
+.ce-nav-mobile-hide { display: flex; }
+.ce-nav-hamburger   { display: none; }
+
+/* ── Responsive grid helpers ── */
+.ce-grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+.ce-grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
+.ce-grid-7 { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; }
+.ce-flex-row { display: flex; gap: 10px; flex-wrap: wrap; }
+
+/* ── Stat card number ── */
+.ce-stat-num { font-family: 'Fraunces', serif; font-size: 32px; font-weight: 700; line-height: 1; }
+
+@media (max-width: 640px) {
+  /* Nav: hide links, show compact brand + icons only */
+  .ce-nav { padding: 12px 16px; }
+  .ce-nav-mobile-hide { display: none; }
+  .ce-nav-hamburger { display: flex; align-items: center; gap: 8px; }
+
+  /* Page */
+  .ce-page { padding: 24px 16px; }
+
+  /* Grids collapse */
+  .ce-grid-3 { grid-template-columns: repeat(3, 1fr); gap: 10px; } /* stats stay 3-col but smaller */
+  .ce-grid-2 { grid-template-columns: 1fr; }
+  .ce-grid-7 { grid-template-columns: repeat(4, 1fr); gap: 6px; }
+
+  /* Stat card number smaller on mobile */
+  .ce-stat-num { font-size: 26px; }
+
+  /* Energy/engagement pill rows wrap */
+  .ce-pill-row { flex-wrap: wrap; }
+
+  /* Cards full width */
+  .ce-card { border-radius: 12px; }
+
+  /* Login card */
+  .ce-login-card { padding: 28px 20px !important; }
+
+  /* Hero section on weekend */
+  .ce-weekend-hero { padding: 32px 20px !important; }
+
+  /* Two-col quick actions → single col */
+  .ce-quick-actions { grid-template-columns: 1fr !important; }
+
+  /* Vault filter row wraps */
+  .ce-vault-filters { flex-wrap: wrap; }
+  .ce-vault-filters input { min-width: 100% !important; }
+}

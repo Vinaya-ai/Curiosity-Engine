@@ -7,7 +7,6 @@ import { auth } from '@/lib/firebase';
 import { addItem, type ContentType } from '@/lib/items';
 import { useTheme } from '@/lib/theme';
 
-// Matches ContentType in lib/items.ts exactly
 const CONTENT_TYPES: { id: ContentType; label: string; icon: string }[] = [
   { id: 'article', label: 'Article', icon: '📄' },
   { id: 'video',   label: 'Video',   icon: '🎬' },
@@ -18,7 +17,6 @@ const CONTENT_TYPES: { id: ContentType; label: string; icon: string }[] = [
   { id: 'other',   label: 'Other',   icon: '🔗' },
 ];
 
-// Matches lib/items.ts union types exactly
 const ENERGY     = ['low', 'medium', 'high']     as const;
 const ENGAGEMENT = ['active', 'passive', 'deep'] as const;
 type EnergyLevel    = typeof ENERGY[number];
@@ -31,6 +29,7 @@ export default function AddCuriosityPage() {
   const router = useRouter();
   const { dark, toggle } = useTheme();
   const [user, setUser]               = useState<any>(null);
+  const [menuOpen, setMenuOpen]       = useState(false);
   const [title, setTitle]             = useState('');
   const [link, setLink]               = useState('');
   const [contentType, setContentType] = useState<ContentType>('article');
@@ -62,14 +61,7 @@ export default function AddCuriosityPage() {
     if (!title.trim()) return;
     setError(null); setSaving(true);
     try {
-      await addItem(user.uid, {
-        title,
-        link: link || undefined,
-        timeRequired,
-        energyLevel: energy,
-        engagementType: engagement,
-        contentType,
-      });
+      await addItem(user.uid, { title, link: link || undefined, timeRequired, energyLevel: energy, engagementType: engagement, contentType });
       setSuccess(true);
       setTimeout(() => router.push('/curiosity/vault'), 1200);
     } catch (err) {
@@ -91,41 +83,51 @@ export default function AddCuriosityPage() {
     <div style={{ minHeight: '100vh', background: 'var(--bg)' }}>
       <nav className="ce-nav">
         <a href="/dashboard" className="ce-brand">Curiosity <em>Engine</em></a>
-        <div className="ce-nav-links">
+        <div className="ce-nav-links ce-nav-mobile-hide">
           <a href="/dashboard" className="ce-nav-link">Dashboard</a>
           <a href="/curiosity/vault" className="ce-nav-link">Vault</a>
           <span className="ce-nav-link active">+ Add</span>
           <a href="/weekend" className="ce-nav-link">Weekend</a>
           <button className="ce-theme-btn" onClick={toggle}>{dark ? '☀️' : '🌙'}</button>
         </div>
+        <div className="ce-nav-hamburger">
+          <button className="ce-theme-btn" onClick={toggle}>{dark ? '☀️' : '🌙'}</button>
+          <button className="ce-theme-btn" onClick={() => setMenuOpen(o => !o)}>☰</button>
+        </div>
       </nav>
+      {menuOpen && (
+        <div style={{ background: 'var(--bg-card)', borderBottom: '1px solid var(--border)', padding: '8px 16px', display: 'flex', flexDirection: 'column', gap: 2 }}>
+          {[['Dashboard','/dashboard'],['Vault','/curiosity/vault'],['+ Add','/curiosity/add'],['Weekend','/weekend']].map(([label, href]) => (
+            <a key={href} href={href} className="ce-nav-link" style={{ display: 'block', padding: '10px 12px' }} onClick={() => setMenuOpen(false)}>{label}</a>
+          ))}
+        </div>
+      )}
 
       <div className="ce-page" style={{ maxWidth: 700 }}>
         <div style={{ marginBottom: 32 }}>
-          <h1 style={{ fontFamily: "'Fraunces',serif", fontSize: 30, fontWeight: 700, color: 'var(--text)', letterSpacing: '-0.4px' }}>
+          <h1 style={{ fontFamily: "'Fraunces',serif", fontSize: 'clamp(24px,6vw,30px)', fontWeight: 700, color: 'var(--text)', letterSpacing: '-0.4px' }}>
             Add a <em style={{ fontStyle: 'italic', color: 'var(--rose)' }}>curiosity</em>
           </h1>
           <p style={{ color: 'var(--text-2)', marginTop: 6, fontSize: 14 }}>Capture it before you forget.</p>
         </div>
 
         <form onSubmit={handleSubmit}>
-          <div className="ce-card" style={{ padding: '28px', display: 'flex', flexDirection: 'column', gap: 22 }}>
+          <div className="ce-card" style={{ padding: 'clamp(18px,4vw,28px)', display: 'flex', flexDirection: 'column', gap: 22 }}>
 
             <div>
               <label className="ce-label">Title *</label>
-              <input className="ce-input" value={title} onChange={e => setTitle(e.target.value)}
-                placeholder="What caught your eye?" required />
+              <input className="ce-input" value={title} onChange={e => setTitle(e.target.value)} placeholder="What caught your eye?" required />
             </div>
 
             <div>
               <label className="ce-label">Link</label>
-              <input className="ce-input" value={link} onChange={e => setLink(e.target.value)}
-                placeholder="https://..." type="url" />
+              <input className="ce-input" value={link} onChange={e => setLink(e.target.value)} placeholder="https://..." type="url" />
             </div>
 
+            {/* Content type — 4-col on mobile via ce-grid-7 class */}
             <div>
               <label className="ce-label">Content Type</label>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 8 }}>
+              <div className="ce-grid-7">
                 {CONTENT_TYPES.map(t => (
                   <button key={t.id} type="button" onClick={() => setContentType(t.id)} style={{
                     padding: '10px 4px', borderRadius: 'var(--radius)', border: '1px solid',
@@ -140,7 +142,8 @@ export default function AddCuriosityPage() {
               </div>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+            {/* Energy + Engagement — stack on mobile */}
+            <div className="ce-grid-2">
               <div>
                 <label className="ce-label">Energy Level</label>
                 <div style={{ display: 'flex', gap: 6 }}>
@@ -183,7 +186,7 @@ export default function AddCuriosityPage() {
               </div>
             </div>
 
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
               <button type="button" onClick={handleAITag} disabled={tagging || tagged} style={{
                 padding: '9px 16px', borderRadius: 'var(--radius)', border: '1px solid',
                 borderColor: tagged ? 'var(--mint-border)' : 'var(--border)',
@@ -192,8 +195,7 @@ export default function AddCuriosityPage() {
                 fontSize: 13, fontWeight: 600, cursor: tagged ? 'default' : 'pointer',
                 fontFamily: "'DM Sans',sans-serif", transition: 'all 0.15s', display: 'flex', gap: 6, alignItems: 'center',
               }}>
-                {tagging
-                  ? <><div className="ce-spinner" style={{ borderColor: 'rgba(0,0,0,0.2)', borderTopColor: 'var(--mint)' }} />Tagging...</>
+                {tagging ? <><div className="ce-spinner" style={{ borderColor: 'rgba(0,0,0,0.2)', borderTopColor: 'var(--mint)' }} />Tagging…</>
                   : tagged ? '✓ AI Tagged' : '🤖 AI Auto-tag'}
               </button>
               {!tagged && <span style={{ fontSize: 12, color: 'var(--text-3)' }}>Auto-detect type & energy from URL</span>}
@@ -201,9 +203,9 @@ export default function AddCuriosityPage() {
 
             {error && <div className="ce-error">{error}</div>}
 
-            <div style={{ display: 'flex', gap: 10, paddingTop: 4 }}>
+            <div style={{ display: 'flex', gap: 10, paddingTop: 4, flexWrap: 'wrap' }}>
               <button type="button" onClick={() => router.back()} className="ce-btn ce-btn-secondary" style={{ width: 'auto', padding: '12px 20px' }}>Cancel</button>
-              <button type="submit" disabled={saving || !title.trim()} className="ce-btn ce-btn-primary">
+              <button type="submit" disabled={saving || !title.trim()} className="ce-btn ce-btn-primary" style={{ flex: 1 }}>
                 {saving && <div className="ce-spinner" />}
                 {saving ? 'Saving...' : 'Save to Vault ✨'}
               </button>
