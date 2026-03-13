@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
-import { collection, getDocs, query, where } from 'firebase/firestore';
+import { collection, getDocs } from 'firebase/firestore';
 import { auth, db } from '@/lib/firebase';
 import { useTheme } from '@/lib/theme';
 
@@ -30,7 +30,7 @@ export default function DashboardPage() {
       if (!u) { router.replace('/login'); return; }
       setUser(u);
       try {
-        const snap = await getDocs(collection(db, 'curiosities'));
+        const snap = await getDocs(collection(db, 'users', u.uid, 'items'));
         const items = snap.docs.map(d => ({ id: d.id, ...d.data() })) as Item[];
         const completed = items.filter(i => i.completed).length;
         setStats({ total: items.length, completed, pending: items.length - completed });

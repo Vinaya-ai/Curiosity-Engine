@@ -8,7 +8,7 @@ import { getUserItems, toggleItemCompletion } from '@/lib/items';
 import { useTheme } from '@/lib/theme';
 
 interface Item {
-  id: string; title: string; url?: string; notes?: string;
+  id: string; title: string; link?: string;
   contentType: string; energyLevel: string; engagementType: string;
   timeRequired: number; completed: boolean; aiTagged?: boolean;
 }
@@ -24,11 +24,13 @@ export default function VaultPage() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState<'all' | 'pending' | 'done'>('all');
-  const [energyFilter, setEnergyFilter] = useState<string>('all');
+  const [energyFilter, setEnergyFilter] = useState<string>("all");
+  const [userId, setUserId] = useState<string>("");
 
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, async (u) => {
-      if (!u) { router.replace('/login'); return; }
+      if (!u) { router.replace("/login"); return; }
+      setUserId(u.uid);
       try {
         const data = await getUserItems(u.uid);
         setItems(data as Item[]);
@@ -53,8 +55,8 @@ export default function VaultPage() {
 
   const handleToggle = async (id: string, current: boolean) => {
     setItems(prev => prev.map(i => i.id === id ? { ...i, completed: !current } : i));
-    try { await toggleItemCompletion(id, !current); }
-    catch { setItems(prev => prev.map(i => i.id === id ? { ...i, completed: current } : i)); }
+    try { await toggleItemCompletion(userId, id, !current); }
+    catch (e) { setItems(prev => prev.map(i => i.id === id ? { ...i, completed: current } : i)); }
   };
 
   const ItemCard = ({ item }: { item: Item }) => (
@@ -93,8 +95,8 @@ export default function VaultPage() {
         </div>
       </div>
 
-      {item.url && (
-        <a href={item.url} target="_blank" rel="noopener noreferrer" style={{
+      {item.link && (
+        <a href={item.link} target="_blank" rel="noopener noreferrer" style={{
           padding: '6px 12px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border)',
           fontSize: 12, fontWeight: 600, color: 'var(--rose)', textDecoration: 'none',
           background: 'var(--rose-light)', flexShrink: 0, transition: 'all 0.15s',

@@ -8,7 +8,7 @@ import { getUserItems, toggleItemCompletion } from '@/lib/items';
 import { useTheme } from '@/lib/theme';
 
 interface Item {
-  id: string; title: string; url?: string;
+  id: string; title: string; link?: string;
   contentType: string; energyLevel: string; engagementType: string;
   timeRequired: number; completed: boolean;
 }
@@ -85,10 +85,12 @@ export default function WeekendPage() {
   const [timeFilter, setTimeFilter] = useState(60);
   const [result, setResult] = useState<Item | null>(null);
   const [done, setDone] = useState(false);
+  const [userId, setUserId] = useState<string>("");
 
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, async (u) => {
-      if (!u) { router.replace('/login'); return; }
+      if (!u) { router.replace("/login"); return; }
+      setUserId(u.uid);
       try {
         const data = await getUserItems(u.uid);
         setItems((data as Item[]).filter(i => !i.completed));
@@ -114,7 +116,7 @@ export default function WeekendPage() {
   const handleDone = async () => {
     if (!result) return;
     setDone(true);
-    await toggleItemCompletion(result.id, true);
+    await toggleItemCompletion(userId, result.id, true);
     setItems(prev => prev.filter(i => i.id !== result.id));
     setTimeout(() => { setResult(null); setMode('choose'); setDone(false); }, 1500);
   };
@@ -222,8 +224,8 @@ export default function WeekendPage() {
                   </span>
                 </div>
                 <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-                  {result.url && (
-                    <a href={result.url} target="_blank" rel="noopener noreferrer" className="ce-btn ce-btn-primary" style={{ width: 'auto', padding: '11px 20px', textDecoration: 'none', fontSize: 14 }}>
+                  {result.link && (
+                    <a href={result.link} target="_blank" rel="noopener noreferrer" className="ce-btn ce-btn-primary" style={{ width: 'auto', padding: '11px 20px', textDecoration: 'none', fontSize: 14 }}>
                       Open it →
                     </a>
                   )}

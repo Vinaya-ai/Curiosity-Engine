@@ -4,48 +4,54 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { onAuthStateChanged } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
-import { addItem } from '@/lib/items';
+import { addItem, type ContentType } from '@/lib/items';
 import { useTheme } from '@/lib/theme';
 
-const CONTENT_TYPES = [
+// Matches ContentType in lib/items.ts exactly
+const CONTENT_TYPES: { id: ContentType; label: string; icon: string }[] = [
   { id: 'article', label: 'Article', icon: '📄' },
-  { id: 'video', label: 'Video', icon: '🎬' },
+  { id: 'video',   label: 'Video',   icon: '🎬' },
   { id: 'podcast', label: 'Podcast', icon: '🎧' },
-  { id: 'book', label: 'Book', icon: '📚' },
-  { id: 'course', label: 'Course', icon: '🎓' },
-  { id: 'other', label: 'Other', icon: '🔗' },
+  { id: 'pdf',     label: 'PDF',     icon: '📑' },
+  { id: 'project', label: 'Project', icon: '🛠' },
+  { id: 'movie',   label: 'Movie',   icon: '🎥' },
+  { id: 'other',   label: 'Other',   icon: '🔗' },
 ];
-const ENERGY = ['low', 'medium', 'high'] as const;
-const ENGAGEMENT = ['active', 'passive', 'social'] as const;
-type EnergyLevel = typeof ENERGY[number];
+
+// Matches lib/items.ts union types exactly
+const ENERGY     = ['low', 'medium', 'high']     as const;
+const ENGAGEMENT = ['active', 'passive', 'deep'] as const;
+type EnergyLevel    = typeof ENERGY[number];
 type EngagementType = typeof ENGAGEMENT[number];
-const ENERGY_COLOR: Record<string, string> = { low: 'var(--mint)', medium: 'var(--rose)', high: 'var(--terra)' };
-const ENGAGEMENT_COLOR: Record<string, string> = { active: 'var(--rose)', passive: 'var(--blue)', social: 'var(--terra)' };
+
+const ENERGY_COLOR:     Record<string, string> = { low: 'var(--mint)', medium: 'var(--rose)', high: 'var(--terra)' };
+const ENGAGEMENT_COLOR: Record<string, string> = { active: 'var(--rose)', passive: 'var(--blue)', deep: 'var(--terra)' };
 
 export default function AddCuriosityPage() {
   const router = useRouter();
   const { dark, toggle } = useTheme();
-  const [user, setUser] = useState<any>(null);
-  const [title, setTitle] = useState('');
-  const [url, setUrl] = useState('');
-  const [notes, setNotes] = useState('');
-  const [contentType, setContentType] = useState('article');
-  const [energy, setEnergy] = useState<EnergyLevel>('medium');
-  const [engagement, setEngagement] = useState<EngagementType>('passive');
+  const [user, setUser]               = useState<any>(null);
+  const [title, setTitle]             = useState('');
+  const [link, setLink]               = useState('');
+  const [contentType, setContentType] = useState<ContentType>('article');
+  const [energy, setEnergy]           = useState<EnergyLevel>('medium');
+  const [engagement, setEngagement]   = useState<EngagementType>('passive');
   const [timeRequired, setTimeRequired] = useState(30);
-  const [tagged, setTagged] = useState(false);
+  const [tagged, setTagged]   = useState(false);
   const [tagging, setTagging] = useState(false);
-  const [saving, setSaving] = useState(false);
+  const [saving, setSaving]   = useState(false);
   const [success, setSuccess] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError]     = useState<string | null>(null);
 
   useEffect(() => {
-    const unsub = onAuthStateChanged(auth, (u) => { if (!u) router.replace('/login'); else setUser(u); });
+    const unsub = onAuthStateChanged(auth, (u) => {
+      if (!u) router.replace('/login'); else setUser(u);
+    });
     return () => unsub();
   }, [router]);
 
   const handleAITag = async () => {
-    if (!url && !title) return;
+    if (!link && !title) return;
     setTagging(true);
     await new Promise(r => setTimeout(r, 1400));
     setTagged(true); setTagging(false);
@@ -56,7 +62,14 @@ export default function AddCuriosityPage() {
     if (!title.trim()) return;
     setError(null); setSaving(true);
     try {
-      await addItem({ title, url, notes, contentType, energyLevel: energy, engagementType: engagement, timeRequired, aiTagged: tagged, completed: false, userId: user.uid });
+      await addItem(user.uid, {
+        title,
+        link: link || undefined,
+        timeRequired,
+        energyLevel: energy,
+        engagementType: engagement,
+        contentType,
+      });
       setSuccess(true);
       setTimeout(() => router.push('/curiosity/vault'), 1200);
     } catch (err) {
@@ -98,27 +111,24 @@ export default function AddCuriosityPage() {
         <form onSubmit={handleSubmit}>
           <div className="ce-card" style={{ padding: '28px', display: 'flex', flexDirection: 'column', gap: 22 }}>
 
-            {/* Title */}
             <div>
               <label className="ce-label">Title *</label>
               <input className="ce-input" value={title} onChange={e => setTitle(e.target.value)}
                 placeholder="What caught your eye?" required />
             </div>
 
-            {/* URL */}
             <div>
               <label className="ce-label">Link</label>
-              <input className="ce-input" value={url} onChange={e => setUrl(e.target.value)}
+              <input className="ce-input" value={link} onChange={e => setLink(e.target.value)}
                 placeholder="https://..." type="url" />
             </div>
 
-            {/* Content type */}
             <div>
               <label className="ce-label">Content Type</label>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: 8 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 8 }}>
                 {CONTENT_TYPES.map(t => (
                   <button key={t.id} type="button" onClick={() => setContentType(t.id)} style={{
-                    padding: '10px 6px', borderRadius: 'var(--radius)', border: '1px solid',
+                    padding: '10px 4px', borderRadius: 'var(--radius)', border: '1px solid',
                     borderColor: contentType === t.id ? 'var(--rose)' : 'var(--border)',
                     background: contentType === t.id ? 'var(--rose-light)' : 'var(--bg)',
                     cursor: 'pointer', transition: 'all 0.15s', textAlign: 'center',
@@ -130,7 +140,6 @@ export default function AddCuriosityPage() {
               </div>
             </div>
 
-            {/* Energy + Engagement */}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
               <div>
                 <label className="ce-label">Energy Level</label>
@@ -164,7 +173,6 @@ export default function AddCuriosityPage() {
               </div>
             </div>
 
-            {/* Time slider */}
             <div>
               <label className="ce-label">Time Required — <span style={{ color: 'var(--rose)', fontWeight: 700 }}>{timeRequired} min</span></label>
               <input type="range" min={5} max={180} step={5} value={timeRequired}
@@ -175,15 +183,6 @@ export default function AddCuriosityPage() {
               </div>
             </div>
 
-            {/* Notes */}
-            <div>
-              <label className="ce-label">Notes</label>
-              <textarea className="ce-input" value={notes} onChange={e => setNotes(e.target.value)}
-                placeholder="Why does this interest you?" rows={3}
-                style={{ resize: 'vertical', minHeight: 80 }} />
-            </div>
-
-            {/* AI Tag */}
             <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
               <button type="button" onClick={handleAITag} disabled={tagging || tagged} style={{
                 padding: '9px 16px', borderRadius: 'var(--radius)', border: '1px solid',
@@ -193,7 +192,8 @@ export default function AddCuriosityPage() {
                 fontSize: 13, fontWeight: 600, cursor: tagged ? 'default' : 'pointer',
                 fontFamily: "'DM Sans',sans-serif", transition: 'all 0.15s', display: 'flex', gap: 6, alignItems: 'center',
               }}>
-                {tagging ? <><div className="ce-spinner" style={{ borderColor: 'rgba(0,0,0,0.2)', borderTopColor: 'var(--mint)' }} />Tagging...</>
+                {tagging
+                  ? <><div className="ce-spinner" style={{ borderColor: 'rgba(0,0,0,0.2)', borderTopColor: 'var(--mint)' }} />Tagging...</>
                   : tagged ? '✓ AI Tagged' : '🤖 AI Auto-tag'}
               </button>
               {!tagged && <span style={{ fontSize: 12, color: 'var(--text-3)' }}>Auto-detect type & energy from URL</span>}
@@ -201,7 +201,6 @@ export default function AddCuriosityPage() {
 
             {error && <div className="ce-error">{error}</div>}
 
-            {/* Submit */}
             <div style={{ display: 'flex', gap: 10, paddingTop: 4 }}>
               <button type="button" onClick={() => router.back()} className="ce-btn ce-btn-secondary" style={{ width: 'auto', padding: '12px 20px' }}>Cancel</button>
               <button type="submit" disabled={saving || !title.trim()} className="ce-btn ce-btn-primary">
@@ -209,6 +208,7 @@ export default function AddCuriosityPage() {
                 {saving ? 'Saving...' : 'Save to Vault ✨'}
               </button>
             </div>
+
           </div>
         </form>
       </div>
