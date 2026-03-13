@@ -15,8 +15,10 @@ const CONTENT_TYPES = [
   { id: 'course', label: 'Course', icon: '🎓' },
   { id: 'other', label: 'Other', icon: '🔗' },
 ];
-const ENERGY = ['low', 'medium', 'high'];
-const ENGAGEMENT = ['active', 'passive', 'social'];
+const ENERGY = ['low', 'medium', 'high'] as const;
+const ENGAGEMENT = ['active', 'passive', 'social'] as const;
+type EnergyLevel = typeof ENERGY[number];
+type EngagementType = typeof ENGAGEMENT[number];
 const ENERGY_COLOR: Record<string, string> = { low: 'var(--mint)', medium: 'var(--rose)', high: 'var(--terra)' };
 const ENGAGEMENT_COLOR: Record<string, string> = { active: 'var(--rose)', passive: 'var(--blue)', social: 'var(--terra)' };
 
@@ -28,8 +30,8 @@ export default function AddCuriosityPage() {
   const [url, setUrl] = useState('');
   const [notes, setNotes] = useState('');
   const [contentType, setContentType] = useState('article');
-  const [energy, setEnergy] = useState('medium');
-  const [engagement, setEngagement] = useState('passive');
+  const [energy, setEnergy] = useState<EnergyLevel>('medium');
+  const [engagement, setEngagement] = useState<EngagementType>('passive');
   const [timeRequired, setTimeRequired] = useState(30);
   const [tagged, setTagged] = useState(false);
   const [tagging, setTagging] = useState(false);
@@ -54,14 +56,7 @@ export default function AddCuriosityPage() {
     if (!title.trim()) return;
     setError(null); setSaving(true);
     try {
-      await addItem(user.uid, {
-        title,
-        link: url,
-        timeRequired,
-        energyLevel: energy,
-        engagementType: engagement,
-        contentType
-      });
+      await addItem({ title, url, notes, contentType, energyLevel: energy, engagementType: engagement, timeRequired, aiTagged: tagged, completed: false, userId: user.uid });
       setSuccess(true);
       setTimeout(() => router.push('/curiosity/vault'), 1200);
     } catch (err) {
