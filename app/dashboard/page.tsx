@@ -20,10 +20,12 @@ export default function DashboardPage() {
   const [recent, setRecent] = useState<Item[]>([]);
   const [loading, setLoading] = useState(true);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [user, setUser] = useState<any>(null);
 
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, async (u) => {
       if (!u) { router.replace('/login'); return; }
+      setUser(u);
       try {
         const snap = await getDocs(collection(db, 'users', u.uid, 'items'));
         const items = snap.docs.map(d => ({ id: d.id, ...d.data() })) as Item[];
@@ -72,7 +74,7 @@ export default function DashboardPage() {
         <div style={{ marginBottom: 32 }}>
           <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-3)', letterSpacing: '0.8px', textTransform: 'uppercase', marginBottom: 8 }}>Welcome back</div>
           <h1 style={{ fontFamily: "'Fraunces',serif", fontSize: 'clamp(26px, 6vw, 34px)', fontWeight: 700, color: 'var(--text)', letterSpacing: '-0.5px', lineHeight: 1.15 }}>
-            Your <em style={{ fontStyle: 'italic', color: 'var(--rose)' }}>curiosities</em> 👋
+          Hey, <em style={{ fontStyle: 'italic', color: 'var(--rose)' }}>{user?.displayName?.split(' ')[0] || user?.email?.split('@')[0] || 'there'}</em> 👋
           </h1>
           <p style={{ color: 'var(--text-2)', fontSize: 15, marginTop: 8 }}>Here's what's waiting for you.</p>
         </div>
