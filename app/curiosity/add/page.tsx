@@ -54,7 +54,14 @@ export default function AddCuriosityPage() {
     if (!title.trim()) return;
     setError(null); setSaving(true);
     try {
-      await addItem({ title, url, notes, contentType, energyLevel: energy, engagementType: engagement, timeRequired, aiTagged: tagged, completed: false, userId: user.uid });
+      await addItem(user.uid, {
+        title,
+        link: url,
+        timeRequired,
+        energyLevel: energy,
+        engagementType: engagement,
+        contentType
+      });
       setSuccess(true);
       setTimeout(() => router.push('/curiosity/vault'), 1200);
     } catch (err) {
