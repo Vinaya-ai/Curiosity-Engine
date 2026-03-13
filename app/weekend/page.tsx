@@ -44,6 +44,7 @@ export default function WeekendPage() {
   const [done, setDone] = useState(false);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const animRef = useRef<number | undefined>(undefined);
+  
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
