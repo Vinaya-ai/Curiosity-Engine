@@ -33,9 +33,10 @@ export default function DashboardPage() {
         const completed = items.filter(i => i.completed).length;
         setStats({ total: items.length, completed, pending: items.length - completed });
         setRecent(items.slice(0, 4));
-      } catch (e) { console.error(e); }
-      setFetchError('Unable to load your data. Please check your login or try again.');
-    });
+      } catch (e) { 
+        console.error(e); }
+        setFetchError('Unable to load your data. Please check your login or try again.');
+      });
     return () => unsub();
   }, [router]);
 
@@ -109,9 +110,7 @@ export default function DashboardPage() {
               ))
             
             ) : fetchError ? (
-              <div className="ce-error">{fetchError}</div> style={{ padding: '32px', textAlign: 'center', color: 'var(--text-3)' }}>
-                {fetchError}
-              </div>
+              <div className="ce-error">{fetchError}<div>
             ) : recent.length === 0 ? (
               <div className="ce-card" style={{ padding: '32px', textAlign: 'center', color: 'var(--text-3)' }}>
                 Nothing yet. <a href="/curiosity/add" style={{ color: 'var(--rose)', fontWeight: 600 }}>Add your first →</a>
