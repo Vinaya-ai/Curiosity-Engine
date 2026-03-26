@@ -27,6 +27,7 @@ export default function VaultPage() {
   const [search, setSearch]   = useState('');
   const [filter, setFilter]   = useState<'all'|'pending'|'done'>('all');
   const [energyFilter, setEnergyFilter] = useState('all');
+  const [fetchError, setFetchError] = useState<string | null>(null);
 
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, async (u) => {
@@ -36,6 +37,7 @@ export default function VaultPage() {
         const data = await getUserItems(u.uid);
         setItems(data as Item[]);
       } catch (e) { console.error(e); }
+      setFetchError('Unable to load your data. Please check your login or try again.');
       setLoading(false);
     });
     return () => unsub();
@@ -162,6 +164,13 @@ export default function VaultPage() {
         {loading ? (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
             {[1,2,3].map(i => <div key={i} className="ce-card" style={{ padding: '20px', opacity: 0.4, height: 72 }} />)}
+          </div>
+        ) : fetchError ? (
+          <div className="ce-error" style={{ display: 'flex', flexDirection: 'column', gap: 12, alignItems: 'flex-start' }}>
+            <span>{fetchError}</span>
+            <button onClick={() => window.location.reload()} className="ce-btn ce-btn-secondary" style={{ width: 'auto', padding: '8px 16px', fontSize: 13 }}>
+             Reload
+            </button>
           </div>
         ) : filtered.length === 0 ? (
           <div className="ce-card" style={{ padding: '48px', textAlign: 'center' }}>

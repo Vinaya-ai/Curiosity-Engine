@@ -21,6 +21,7 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [menuOpen, setMenuOpen] = useState(false);
   const [user, setUser] = useState<any>(null);
+  const [fetchError, setFetchError] = useState<string | null>(null);
 
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, async (u) => {
@@ -33,7 +34,7 @@ export default function DashboardPage() {
         setStats({ total: items.length, completed, pending: items.length - completed });
         setRecent(items.slice(0, 4));
       } catch (e) { console.error(e); }
-      setLoading(false);
+      setFetchError('Unable to load your data. Please check your login or try again.');
     });
     return () => unsub();
   }, [router]);
@@ -106,6 +107,11 @@ export default function DashboardPage() {
                   <div style={{ height: 14, background: 'var(--border)', borderRadius: 6, width: '60%' }} />
                 </div>
               ))
+            
+            ) : fetchError ? (
+              <div className="ce-error">{fetchError}</div> style={{ padding: '32px', textAlign: 'center', color: 'var(--text-3)' }}>
+                {fetchError}
+              </div>
             ) : recent.length === 0 ? (
               <div className="ce-card" style={{ padding: '32px', textAlign: 'center', color: 'var(--text-3)' }}>
                 Nothing yet. <a href="/curiosity/add" style={{ color: 'var(--rose)', fontWeight: 600 }}>Add your first →</a>

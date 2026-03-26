@@ -65,7 +65,7 @@ export default function AddCuriosityPage() {
       setSuccess(true);
       setTimeout(() => router.push('/curiosity/vault'), 1200);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Could not save.');
+      setError('Could not save. Please check your connection or try signing out and back in.');
     } finally { setSaving(false); }
   };
 
