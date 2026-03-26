@@ -36,9 +36,12 @@ export default function VaultPage() {
       try {
         const data = await getUserItems(u.uid);
         setItems(data as Item[]);
-      } catch (e) { console.error(e); }
-      setFetchError('Unable to load your data. Please check your login or try again.');
-      setLoading(false);
+      } catch (e) {
+        console.error(e);
+        setFetchError('Unable to load your data. Please check your login or try again.');
+      } finally {
+        setLoading(false);
+      }
     });
     return () => unsub();
   }, [router]);
@@ -135,7 +138,6 @@ export default function VaultPage() {
           <a href="/curiosity/add" className="ce-btn ce-btn-primary" style={{ width: 'auto', padding: '10px 18px', textDecoration: 'none', fontSize: 13 }}>+ Add New</a>
         </div>
 
-        {/* Filters */}
         <div className="ce-vault-filters" style={{ display: 'flex', gap: 10, marginBottom: 20, flexWrap: 'wrap' }}>
           <input className="ce-input" value={search} onChange={e => setSearch(e.target.value)}
             placeholder="🔍 Search..." style={{ flex: 1, minWidth: 160 }} />
@@ -169,7 +171,7 @@ export default function VaultPage() {
           <div className="ce-error" style={{ display: 'flex', flexDirection: 'column', gap: 12, alignItems: 'flex-start' }}>
             <span>{fetchError}</span>
             <button onClick={() => window.location.reload()} className="ce-btn ce-btn-secondary" style={{ width: 'auto', padding: '8px 16px', fontSize: 13 }}>
-             Reload
+              Reload
             </button>
           </div>
         ) : filtered.length === 0 ? (
