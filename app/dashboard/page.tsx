@@ -33,19 +33,20 @@ export default function DashboardPage() {
         const completed = items.filter(i => i.completed).length;
         setStats({ total: items.length, completed, pending: items.length - completed });
         setRecent(items.slice(0, 4));
-      } catch (e) { 
-        console.error(e); }
+      } catch (e) {
+        console.error(e);
         setFetchError('Unable to load your data. Please check your login or try again.');
-      });
+      } finally {
+        setLoading(false);
+      }
+    });
     return () => unsub();
   }, [router]);
 
   return (
     <div style={{ minHeight: '100vh', background: 'var(--bg)' }}>
-      {/* Nav */}
       <nav className="ce-nav">
         <a href="/dashboard" className="ce-brand">Curiosity <em>Engine</em></a>
-        {/* Desktop links */}
         <div className="ce-nav-links ce-nav-mobile-hide">
           <span className="ce-nav-link active">Dashboard</span>
           <a href="/curiosity/vault" className="ce-nav-link">Vault</a>
@@ -54,14 +55,12 @@ export default function DashboardPage() {
           <button className="ce-theme-btn" onClick={toggle}>{dark ? '☀️' : '🌙'}</button>
           <button className="ce-nav-link" onClick={() => signOut(auth).then(() => router.push('/login'))} style={{ color: 'var(--text-3)' }}>Out</button>
         </div>
-        {/* Mobile icons */}
         <div className="ce-nav-hamburger">
           <button className="ce-theme-btn" onClick={toggle}>{dark ? '☀️' : '🌙'}</button>
           <button className="ce-theme-btn" onClick={() => setMenuOpen(o => !o)}>☰</button>
         </div>
       </nav>
 
-      {/* Mobile dropdown menu */}
       {menuOpen && (
         <div style={{ background: 'var(--bg-card)', borderBottom: '1px solid var(--border)', padding: '8px 16px', display: 'flex', flexDirection: 'column', gap: 2 }}>
           {[['Dashboard','/dashboard'],['Vault','/curiosity/vault'],['+ Add','/curiosity/add'],['Weekend','/weekend']].map(([label, href]) => (
@@ -72,16 +71,14 @@ export default function DashboardPage() {
       )}
 
       <div className="ce-page">
-        {/* Header */}
         <div style={{ marginBottom: 32 }}>
           <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-3)', letterSpacing: '0.8px', textTransform: 'uppercase', marginBottom: 8 }}>Welcome back</div>
           <h1 style={{ fontFamily: "'Fraunces',serif", fontSize: 'clamp(26px, 6vw, 34px)', fontWeight: 700, color: 'var(--text)', letterSpacing: '-0.5px', lineHeight: 1.15 }}>
-          Hey, <em style={{ fontStyle: 'italic', color: 'var(--rose)' }}>{user?.displayName?.split(' ')[0] || user?.email?.split('@')[0] || 'there'}</em> 👋
+            Hey, <em style={{ fontStyle: 'italic', color: 'var(--rose)' }}>{user?.displayName?.split(' ')[0] || user?.email?.split('@')[0] || 'there'}</em> 👋
           </h1>
           <p style={{ color: 'var(--text-2)', fontSize: 15, marginTop: 8 }}>Here's what's waiting for you.</p>
         </div>
 
-        {/* Stats — stays 3-col even on mobile, just smaller */}
         <div className="ce-grid-3" style={{ marginBottom: 32 }}>
           {[
             { label: 'Total',   value: stats.total,     color: 'var(--blue)' },
@@ -95,7 +92,6 @@ export default function DashboardPage() {
           ))}
         </div>
 
-        {/* Recent */}
         <div style={{ marginBottom: 32 }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
             <h2 style={{ fontFamily: "'Fraunces',serif", fontSize: 20, fontWeight: 700, color: 'var(--text)' }}>Recently Added</h2>
@@ -108,9 +104,8 @@ export default function DashboardPage() {
                   <div style={{ height: 14, background: 'var(--border)', borderRadius: 6, width: '60%' }} />
                 </div>
               ))
-            
             ) : fetchError ? (
-              <div className="ce-error">{fetchError}<div>
+              <div className="ce-error">{fetchError}</div>
             ) : recent.length === 0 ? (
               <div className="ce-card" style={{ padding: '32px', textAlign: 'center', color: 'var(--text-3)' }}>
                 Nothing yet. <a href="/curiosity/add" style={{ color: 'var(--rose)', fontWeight: 600 }}>Add your first →</a>
@@ -128,7 +123,6 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* Quick actions — 2-col desktop, 1-col mobile */}
         <div className="ce-grid-2 ce-quick-actions">
           <a href="/curiosity/add" style={{ textDecoration: 'none' }}>
             <div className="ce-card" style={{ padding: '20px', cursor: 'pointer', borderLeft: '3px solid var(--rose)' }}>
